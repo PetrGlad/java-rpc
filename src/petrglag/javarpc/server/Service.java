@@ -4,8 +4,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import petrglag.javarpc.Message;
-import petrglag.javarpc.Response;
+import petrglad.javarpc.Message;
+import petrglad.javarpc.Response;
 
 public class Service {
 	final private Object api;

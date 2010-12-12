@@ -1,8 +1,8 @@
-package petrglag.javarpc.client;
+package petrglad.javarpc.client;
 
 import java.util.Arrays;
 
-import petrglag.javarpc.Response;
+import petrglad.javarpc.Response;
 
 public class Client {
 	ClientSession session;

@@ -6,8 +6,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import petrglag.javarpc.Message;
-import petrglag.javarpc.Response;
+import petrglad.javarpc.Message;
+import petrglad.javarpc.Response;
 
 public class ServerSession implements Runnable {
 

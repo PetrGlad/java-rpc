@@ -1,4 +1,4 @@
-package petrglag.javarpc.client;
+package petrglad.javarpc.client;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,8 +8,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import petrglag.javarpc.Message;
-import petrglag.javarpc.Response;
+import petrglad.javarpc.Message;
+import petrglad.javarpc.Response;
 
 /**
  * Example taken from here:

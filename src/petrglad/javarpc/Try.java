@@ -1,4 +1,4 @@
-package petrglag.javarpc;
+package petrglad.javarpc;
 
 import java.util.Arrays;
 

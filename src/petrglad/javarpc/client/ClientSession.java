@@ -1,4 +1,4 @@
-package petrglag.javarpc.client;
+package petrglad.javarpc.client;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import petrglag.javarpc.Message;
-import petrglag.javarpc.Response;
+import petrglad.javarpc.Message;
+import petrglad.javarpc.Response;
 
 /**
  * Client RPC session.
