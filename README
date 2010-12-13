@@ -1,1 +1,10 @@
-Test task given to be by one of potential employers.
+Test task given to me by one of potential employers.
+
+Task described multi-service client-cserver rpc with possible out-of order execution 
+(server may return answers in different order than they were requested).
+Server should accept clients in single thread and process them in per-client threads.
+Java serialization should be used. Services are configured via config file. 
+Log4j is used for logging.
+
+Build:
+	gradle build
