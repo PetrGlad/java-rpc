@@ -1,4 +1,4 @@
-package petrglag.javarpc.server;
+package petrglad.javarpc.server;
 
 import java.util.HashMap;
 import java.util.Map;

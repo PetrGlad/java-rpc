@@ -1,4 +1,4 @@
-package petrglag.javarpc.service;
+package petrglad.javarpc.service;
 
 public class Calculator {
 	public Long add(Long a, Long b) {
