@@ -2,9 +2,14 @@ package petrglad.javarpc.client;
 
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
 import petrglad.javarpc.Response;
 
 public class Client {
+	
+	static final Logger LOG = Logger.getLogger(Client.class);
+	
 	ClientSession session;
 		
 	public static void main(String[] args) {
@@ -12,7 +17,7 @@ public class Client {
 			System.out.println("Usage: Client host port");
 		} else {
 			Client client = new Client(args[0], Integer.parseInt(args[1]));
-			System.out.println("Response " + client.call("calculator.add", 3L, 4L));
+			LOG.info("Response " + client.call("calculator.add", 3L, 4L));
 		}		
 	}
 
