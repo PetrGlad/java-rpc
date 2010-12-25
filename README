@@ -2,9 +2,16 @@ Test task given to me by one of potential employers.
 
 Task described multi-service client-cserver rpc with possible out-of order execution 
 (server may return answers in different order than they were requested).
-Server should accept clients in single thread and pccept commands in per-client threads and use pull of threads to process them (not yet implemented).
+Server should accept clients in single thread and pccept commands in per-client threads and use pull of threads to process them.
 Java serialization should be used. Services are configured via config file. 
 Log4j is used for logging.
 
+Although these requirements look overdesigned I tried to follow them. 
+Remaining serious TODO is to test with many parallel clients and requests. 
+Client code also seems too clumsy (asynchronous calls would fit this architecture better).
+
 Build:
 	gradle build
+Run:
+	Server services.config port
+	Client serverHost port
