@@ -10,6 +10,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -21,6 +24,7 @@ public class Server implements Runnable {
 
 	private final Services services;
 	private final int port;
+	private final ThreadPoolExecutor executor;
 
 	public static void main(String[] args) throws FileNotFoundException,
 			IOException {
@@ -53,6 +57,10 @@ public class Server implements Runnable {
 	public Server(Services services, int port) {
 		this.services = services;
 		this.port = port;
+		// TODO Implement graceful shutdown.
+		// XXX Queue is unbounded.
+		this.executor = new ThreadPoolExecutor(2, 10, 10, TimeUnit.SECONDS,
+				new LinkedBlockingQueue<Runnable>());
 	}
 
 	@Override
@@ -72,7 +80,7 @@ public class Server implements Runnable {
 
 	private void newConnection(Socket socket) {
 		LOG.info("Accepted connection " + socket.getRemoteSocketAddress());
-		Thread t = new Thread(new ServerSession(services, socket));
+		Thread t = new Thread(new ServerSession(services, socket, executor));
 		t.setDaemon(true);
 		t.setName("Server session for " + socket.getRemoteSocketAddress());
 		t.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {

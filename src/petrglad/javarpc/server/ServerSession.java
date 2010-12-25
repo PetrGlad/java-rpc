@@ -5,41 +5,63 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.log4j.Logger;
 
 import petrglad.javarpc.Message;
 import petrglad.javarpc.Response;
+import petrglad.javarpc.util.Present;
 
 public class ServerSession implements Runnable {
+	static final Logger LOG = Logger.getLogger(Server.class);
 
 	private final Socket socket;
 	private final Services services;
+	private final Executor executor;
+	private Thread responseWriter;
 
-	private ObjectInputStream oIn = null;
-	private ObjectOutputStream oOut = null;
+	// XXX queue is unbounded
+	private BlockingQueue<Response> completedCalls = new LinkedBlockingQueue<Response>();
 
-	public ServerSession(Services services, Socket socket) {
+	public ServerSession(Services services, Socket socket, Executor executor) {
 		assert null != socket;
 		assert null != services;
 		this.socket = socket;
 		this.services = services;
+		this.executor = executor;
 	}
 
 	@Override
 	public void run() {
+		startResponseWriter();
+
+		ObjectInputStream oIn = null;
 		try {
 			oIn = new ObjectInputStream(socket.getInputStream());
-			oOut = new ObjectOutputStream(socket.getOutputStream());
 			while (true) {
 				Object o;
 				try {
 					o = oIn.readObject();
 				} catch (EOFException e) {
-					System.out.println("Client closed connection.");
+					LOG.info("Client closed connection.", e);
 					break;
 				}
 				if (o instanceof Message) {
-					oOut.writeObject(process((Message) o));
+					process((Message) o);
 				} else {
+					// XXX Write response here?
 					throw new RuntimeException("Unexpected type of request "
 							+ o.getClass().getCanonicalName());
 				}
@@ -52,25 +74,74 @@ public class ServerSession implements Runnable {
 					oIn.close();
 				} catch (IOException e) {
 				}
-			if (null != oOut)
-				try {
-					oOut.close();
-				} catch (IOException e) {
-				}
-			try {
-				socket.close();
-			} catch (IOException e) {
-			}
+			closeSocket();
 		}
 	}
 
-	private Object process(Message msg) {
-		String[] names = msg.methodName.split("\\.");
-		Service s = services.get(names[0]);
-		if (null == s) {
-			return new Response(msg, new RuntimeException("Service " + names[0]
-					+ " is not found."));
+	private void startResponseWriter() {
+		// XXX Two threads per client might be too involved. Alternatively we
+		// could have mutex for response write and write responses directly from
+		// all tasks but that would block executor threads if there are many
+		// concurrent responses to same client.
+		responseWriter = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				ObjectOutputStream oOut = null;
+				try {
+					oOut = new ObjectOutputStream(socket.getOutputStream());
+					while (true) {
+						final Response r = completedCalls.poll(3,
+								TimeUnit.SECONDS);
+						if (null != r)
+							oOut.writeObject(r);
+					}
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				} finally {
+					if (null != oOut)
+						try {
+							oOut.close();
+						} catch (IOException e) {
+						}
+					closeSocket();
+				}
+			}
+		});
+		responseWriter.setDaemon(true);
+		responseWriter.start();
+	}
+
+	private void closeSocket() {
+		try {
+			socket.close();
+		} catch (IOException e) {
 		}
-		return s.process(new Message(msg.serialId, names[1], msg.args));
+	}
+
+	private void process(final Message msg) {
+		final String[] names = msg.methodName.split("\\.");
+		final Service s = services.get(names[0]);
+		if (null == s) {
+			enqueueResult(new Response(msg, new RuntimeException("Service " + names[0] + " is not found.")));
+		}
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				
+				try {
+					enqueueResult(s.process(new Message(msg.serialId, names[1], msg.args)));					
+				} catch (Exception e) {
+					enqueueResult(new Response(msg, e)); 
+				}
+			}
+		});
+	}
+
+	void enqueueResult(Response response) {
+		try {
+			completedCalls.offer(response, 2, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			LOG.error("Can not send result, queue is full", e);
+		}
 	}
 }
