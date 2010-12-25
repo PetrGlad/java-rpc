@@ -32,34 +32,29 @@ public class ClientSession {
 	}
 
 	public long send(String methodName, List<Object> args) {
-		Message m = newMessage(methodName, args);
+		final Message m = newMessage(methodName, args);
 		serverProxy.send(m);
 		responses.put(m.serialId, null);
 		return m.serialId;
 	}
 
 	public Response getResponse(long messageId) {
-		// (Otherwise we could poll asynchronously or give a callback to serverProxy)
-		receiveResponses(); 
-		
-		Response r = responses.get(messageId);
-		if (null != r) {
-			return responses.remove(messageId);
-		} else {
-			return null;
-		}
+		// (Otherwise we could poll asynchronously or give a callback to
+		// serverProxy)
+		receiveResponses();
+
+		return responses.remove(messageId);
 	}
 
 	private void receiveResponses() {
 		// TODO Detect timeouts here
 		Response r = serverProxy.receive();
 		if (null != r) {
-			if (responses.containsKey(r.serialId)) {
+			if (responses.containsKey(r.serialId))
 				responses.put(r.serialId, r);
-			} else {
+			else
 				throw new RuntimeException("Got unrequested reponse: serialId="
 						+ r.serialId);
-			}
 		}
 	}
 }
