@@ -33,8 +33,8 @@ public class Client {
 						final Set<Long> tokens = Sets
 								.newHashSetWithExpectedSize(N);
 						for (long i = 0; i < N; i++)
-							tokens.add(client.send("calculator.add", threadNo,
-									i));
+							tokens.add(client.send("calculator.guess",
+									threadNo, i));
 						while (!tokens.isEmpty()) {
 							Long id = tokens.iterator().next();
 							Object result = client.receive(id);
