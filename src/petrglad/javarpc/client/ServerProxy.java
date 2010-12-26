@@ -70,7 +70,7 @@ public class ServerProxy {
 					return (Response) o;
 				} else {
 					throw new RuntimeException(
-							"Reponse object is of unexpected type "
+							"Response object is of unexpected type "
 									+ o.getClass().getCanonicalName());
 				}
 			}
