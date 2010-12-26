@@ -122,26 +122,30 @@ public class ServerSession implements Runnable {
 		final String[] names = msg.methodName.split("\\.");
 		final Service s = services.get(names[0]);
 		if (null == s) {
-			enqueueResult(new Response(msg, new RuntimeException("Service " + names[0] + " is not found.")));
+			enqueueResult(new Response(msg, new RuntimeException("Service "
+					+ names[0] + " is not found.")));
 		}
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				
 				try {
-					enqueueResult(s.process(new Message(msg.serialId, names[1], msg.args)));					
+					enqueueResult(s.process(new Message(msg.serialId, names[1],
+							msg.args)));
 				} catch (Exception e) {
-					enqueueResult(new Response(msg, e)); 
+					enqueueResult(new Response(msg, e));
 				}
 			}
 		});
 	}
 
 	void enqueueResult(Response response) {
-		try {
-			completedCalls.offer(response, 2, TimeUnit.MINUTES);
-		} catch (InterruptedException e) {
-			LOG.error("Can not send result, queue is full", e);
-		}
+		while (true)
+			try {
+				if (!completedCalls.offer(response, 2, TimeUnit.MINUTES))
+					LOG.error("Can not send result (response queue is full) responseId="
+							+ response.serialId);
+				return;
+			} catch (InterruptedException e) {
+			}
 	}
 }

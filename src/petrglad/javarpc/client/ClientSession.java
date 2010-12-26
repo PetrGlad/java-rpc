@@ -24,6 +24,16 @@ public class ClientSession {
 	public ClientSession(ServerProxy server) {
 		this.serverProxy = server;
 		serverProxy.open();
+		Thread receiver = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (true) {
+					receiveResponses();
+				}
+			}
+		});
+		receiver.setDaemon(true);
+		receiver.start();
 	}
 
 	private Message newMessage(String target, List<Object> args) {
@@ -39,10 +49,6 @@ public class ClientSession {
 	}
 
 	public Response getResponse(long messageId) {
-		// (Otherwise we could poll asynchronously or give a callback to
-		// serverProxy)
-		receiveResponses();
-
 		// Do not remove key if response is null (not received yet)
 		Response r = responses.get(messageId);
 		if (null != r) {
