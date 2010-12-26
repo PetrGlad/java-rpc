@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import petrglad.javarpc.Response;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class Client {
@@ -20,21 +21,39 @@ public class Client {
 			System.out.println("Usage: Client host port");
 		} else {
 			LOG.info("Started " + Arrays.toString(args));
-			Client client = new Client(args[0], Integer.parseInt(args[1]));
-			// LOG.info("Response " + client.call("calculator.add", 3L, 4L));
-			{
-				int N = 100000;
-				final Set<Long> tokens = Sets.newHashSetWithExpectedSize(N);
-				for (long i = 0; i < N; i++)
-					tokens.add(client.send("calculator.add", 3L, i));
-				while (!tokens.isEmpty()) {
-					Long id = tokens.iterator().next();
-					Object result = client.receive(id);
-					if (null != result) {
-						LOG.info("Request id=" + id + ", result=" + result);				
-						tokens.remove(id);
+			final Client client = new Client(args[0], Integer.parseInt(args[1]));
+			LOG.info("Response " + client.call("calculator.add", 3L, 4L));
+			Set<Thread> threads = Sets.newHashSet();
+			for (int ti = 0; ti < 10; ti++) {
+				final long threadNo = ti;
+				Thread t = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						int N = 10000;
+						final Set<Long> tokens = Sets
+								.newHashSetWithExpectedSize(N);
+						for (long i = 0; i < N; i++)
+							tokens.add(client.send("calculator.add", threadNo,
+									i));
+						while (!tokens.isEmpty()) {
+							Long id = tokens.iterator().next();
+							Object result = client.receive(id);
+							if (null != result) {
+								LOG.info("Request id=" + id + ", result="
+										+ result);
+								tokens.remove(id);
+							}
+						}
 					}
-					LOG.debug("Tokens count " + tokens.size());
+				});
+				threads.add(t);
+				t.setName("Client " + ti);
+				t.start();
+			}
+			for (Thread t : threads) {
+				try {
+					t.join();
+				} catch (InterruptedException e) {
 				}
 			}
 			LOG.info("Finished.");

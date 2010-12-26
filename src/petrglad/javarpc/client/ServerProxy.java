@@ -47,15 +47,16 @@ public class ServerProxy {
 		} catch (UnknownHostException e) {
 			throw new RuntimeException("Host is not found " + host + ":" + port);
 		} catch (IOException e) {
-			throw new RuntimeException(
-					"Could not open connection to " + host);
+			throw new RuntimeException("Could not open connection to " + host);
 		}
 	}
 
 	public void send(Message m) {
 		try {
-			oOut.writeObject(m);
-			oOut.flush();
+			synchronized (oOut) {
+				oOut.writeObject(m);
+				oOut.flush();
+			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -63,13 +64,15 @@ public class ServerProxy {
 
 	public Response receive() {
 		try {
-			Object o = oIn.readObject();
-			if (o instanceof Response) {
-				return (Response) o;
-			} else {
-				throw new RuntimeException(
-						"Reponse object is of unexpected type "
-								+ o.getClass().getCanonicalName());
+			synchronized (oIn) {
+				Object o = oIn.readObject();
+				if (o instanceof Response) {
+					return (Response) o;
+				} else {
+					throw new RuntimeException(
+							"Reponse object is of unexpected type "
+									+ o.getClass().getCanonicalName());
+				}
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
