@@ -43,7 +43,13 @@ public class ClientSession {
 		// serverProxy)
 		receiveResponses();
 
-		return responses.remove(messageId);
+		// Do not remove key if response is null (not received yet)
+		Response r = responses.get(messageId);
+		if (null != r) {
+			return responses.remove(messageId);
+		} else {
+			return null;
+		}
 	}
 
 	private void receiveResponses() {
