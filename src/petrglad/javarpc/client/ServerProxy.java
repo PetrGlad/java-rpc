@@ -12,10 +12,7 @@ import petrglad.javarpc.Message;
 import petrglad.javarpc.Response;
 
 /**
- * Example taken from here:
- * http://download.oracle.com/javase/tutorial/networking
- * /sockets/examples/KnockKnockClient.java
- * 
+ * Handles connection to server and message serialization.
  * @author petr
  */
 public class ServerProxy {
@@ -23,7 +20,7 @@ public class ServerProxy {
 	private final String host;
 	private final int port;
 
-	private Socket kkSocket = null;
+	private Socket socket = null;
 	private ObjectOutputStream oOut = null;
 	private ObjectInputStream oIn = null;
 
@@ -33,16 +30,16 @@ public class ServerProxy {
 	}
 
 	public void open() {
-		assert null == kkSocket;
+		assert null == socket;
 		assert null == oOut;
 		assert null == oIn;
 		try {
-			kkSocket = new Socket(host, port);
+			socket = new Socket(host, port);
 
-			OutputStream out = kkSocket.getOutputStream();
+			OutputStream out = socket.getOutputStream();
 			oOut = new ObjectOutputStream(out);
 
-			InputStream in = kkSocket.getInputStream();
+			InputStream in = socket.getInputStream();
 			oIn = new ObjectInputStream(in);
 		} catch (UnknownHostException e) {
 			throw new RuntimeException("Host is not found " + host + ":" + port);
@@ -89,7 +86,7 @@ public class ServerProxy {
 		} catch (IOException e) {
 		}
 		try {
-			kkSocket.close();
+			socket.close();
 		} catch (IOException e) {
 		}
 	}

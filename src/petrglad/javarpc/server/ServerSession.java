@@ -5,16 +5,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -22,7 +14,6 @@ import org.apache.log4j.Logger;
 
 import petrglad.javarpc.Message;
 import petrglad.javarpc.Response;
-import petrglad.javarpc.util.Present;
 
 public class ServerSession implements Runnable {
 	static final Logger LOG = Logger.getLogger(Server.class);

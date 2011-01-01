@@ -16,8 +16,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
-import petrglad.javarpc.client.Client;
-
 public class Server implements Runnable {
 
 	static final Logger LOG = Logger.getLogger(Server.class);
