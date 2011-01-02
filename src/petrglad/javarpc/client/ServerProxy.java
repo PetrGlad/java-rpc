@@ -6,8 +6,11 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import com.google.common.io.Closeables;
+
 import petrglad.javarpc.Message;
 import petrglad.javarpc.Response;
+import petrglad.javarpc.Utils;
 
 /**
  * Handles connection to server and message serialization.
@@ -72,17 +75,8 @@ public class ServerProxy {
     }
 
     public void close() {
-        try {
-            oOut.close();
-        } catch (IOException e) {
-        }
-        try {
-            oIn.close();
-        } catch (IOException e) {
-        }
-        try {
-            socket.close();
-        } catch (IOException e) {
-        }
+        Closeables.closeQuietly(oOut);
+        Closeables.closeQuietly(oIn);
+        Utils.closeSocket(socket);
     }
 }
