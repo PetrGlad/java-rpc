@@ -12,7 +12,8 @@ public class Calculator {
 
 	public Long guess(Long a, Long b) {
 		try {
-			Thread.sleep(0, random.nextInt(999999));
+			// Thread.sleep(0, random.nextInt(999999));
+			Thread.sleep(20);
 		} catch (InterruptedException e) {
 		}
 		return a * b;

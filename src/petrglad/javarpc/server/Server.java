@@ -15,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
+import petrglad.javarpc.Utils;
+
 public class Server implements Runnable {
 
     static final Logger LOG = Logger.getLogger(Server.class);
@@ -44,7 +46,7 @@ public class Server implements Runnable {
         // XXX (refactoring) Better way to get String->String?
         Properties config = new Properties();
         config.load(new FileInputStream(args[0]));
-        Map<String, String> serviceConfig = new HashMap<String, String>();
+        final Map<String, String> serviceConfig = new HashMap<String, String>();
         for (Object key : config.keySet()) {
             serviceConfig.put((String) key, (String) config.get(key));
         }
@@ -56,27 +58,29 @@ public class Server implements Runnable {
         this.port = port;
         // TODO Implement graceful shutdown.
         // XXX Queue is unbounded.
-        this.executor = new ThreadPoolExecutor(2, 10, 10, TimeUnit.SECONDS,
+        this.executor = new ThreadPoolExecutor(2, 16, 10, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<Runnable>());
     }
-    
+
     @Override
     public void run() {
+        ServerSocket socket = null;
         try {
-            ServerSocket socket = new ServerSocket(port);
+            socket = new ServerSocket(port);
             LOG.info("Server is accepting connections on "
-                    + socket.getLocalPort());
-            while (true) {
+                    + socket.getLocalSocketAddress());
+            while (!socket.isClosed())
                 newConnection(socket.accept());
-            }
         } catch (Exception e) {
             // TODO Log error here.
             throw new RuntimeException(e);
+        } finally {
+            Utils.closeSocket(socket);
         }
     }
 
     private void newConnection(Socket socket) {
-        LOG.info("Accepted connection " + socket.getRemoteSocketAddress());
+        LOG.info("Accepted client connection " + socket.getRemoteSocketAddress());
         new ServerSession(services, socket, executor).open();
     }
 }

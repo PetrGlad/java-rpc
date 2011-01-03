@@ -1,16 +1,14 @@
 Test task given to me by one of potential employers.
 
-Task described multi-service client-server RPC with possible out-of order execution 
+In brief, task described multi-service client-server RPC with possible out-of order execution 
 (server may return answers in different order than they were requested).
-Server should accept clients in single thread and accept commands in per-client threads and use pull of threads to process them.
+Server should accept clients in single thread and accept commands in per-client threads 
+and use pool of threads to process them.
 Java serialization should be used. Services are configured via configuration file. 
 Log4j is used for logging.
 
 Although these requirements look overdesigned I tried to follow them. Also, suggested client-side 
 interface was synchronous but in looks too clumsy in this task - asynchronous calls would fit this architecture better. 
-
-Remaining serious TODO is to test with many parallel clients and requests. I am also thinking of adding send-queue for
-client (instead of mutexing on output object stream). 
 
 Build:
 	gradle build

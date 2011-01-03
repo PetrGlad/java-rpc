@@ -1,5 +1,6 @@
 package petrglad.javarpc.client;
 
+import java.io.Closeable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -10,65 +11,52 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import petrglad.javarpc.Message;
 import petrglad.javarpc.Response;
+import petrglad.javarpc.util.Flag;
+import petrglad.javarpc.util.Sink;
+import petrglad.javarpc.util.Spoolers;
 
 /**
- * Client RPC session.  
+ * Client RPC session.
  */
-public class ClientSession {
+public class ClientSession implements Closeable {
 
     private final AtomicLong messageSerialId = new AtomicLong(0);
 
-    private final ServerProxy serverProxy;
+    private final Proxy<Message> serverProxy;
 
     private final BlockingQueue<Message> sendQueue = new LinkedBlockingDeque<Message>();
 
     private final Map<Long, Response> responses = Collections
             .synchronizedMap(new HashMap<Long, Response>());
+    boolean isClosed = false;
 
-    private boolean isOpen;
-
-    public ClientSession(ServerProxy server) {
+    public ClientSession(Proxy<Message> server) {
         serverProxy = server;
-        isOpen = true;
+        serverProxy.attach(newReceiver(), //
+                Spoolers.bufferSupplier(sendQueue, //
+                        new Flag() {
+                            @Override
+                            public Boolean get() {
+                                return !isClosed;
+                            }
+                        }));
         serverProxy.open();
-        startReceiver();
-        startSender();
     }
 
+    @Override
     public void close() {
-        isOpen = false;
+        isClosed = true;
         serverProxy.close();
     }
 
-    private void startSpooler(final String name, final Runnable proc) {
-        Thread sender = new Thread(new Runnable() {
+    private Sink<Object> newReceiver() {
+        return new Sink<Object>() {
             @Override
-            public void run() {
-                while (isOpen)
-                    proc.run();
+            public void put(Object v) {
+                final Response r = (Response) v;
+                responses.put(r.serialId, r);
             }
-        });
-        sender.setName(name);
-        sender.setDaemon(true);
-        sender.start();
-    }
-
-    private void startReceiver() {
-        startSpooler("Client receiver", new Runnable() {
-            @Override
-            public void run() {
-                receiveResponses();
-            }
-        });
-    }
-
-    private void startSender() {
-        startSpooler("Client sender", new Runnable() {
-            @Override
-            public void run() {
-                sendResponses();
-            }
-        });
+        };
     }
 
     private Message newMessage(String target, List<Object> args) {
@@ -84,19 +72,5 @@ public class ClientSession {
 
     public Response getResponse(long messageId) {
         return responses.remove(messageId);
-    }
-
-    private void receiveResponses() {
-        // TODO Detect timeouts here?
-        final Response r = serverProxy.receive();
-        responses.put(r.serialId, r);
-    }
-
-    private void sendResponses() {
-        while (!sendQueue.isEmpty()) {
-            final Message m = sendQueue.poll();
-            if (null != m)
-                serverProxy.send(m);
-        }
     }
 }

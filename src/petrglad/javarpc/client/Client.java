@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import petrglad.javarpc.Message;
 import petrglad.javarpc.Response;
 
 import com.google.common.collect.Sets;
@@ -28,7 +29,7 @@ public class Client {
     }
 
     private static void concurrentTest(final Client client) {
-        Set<Thread> threads = Sets.newHashSet();
+        final Set<Thread> threads = Sets.newHashSet();
         for (int ti = 0; ti < 10; ti++) {
             final long threadNo = ti;
             Thread t = new Thread(new Runnable() {
@@ -61,11 +62,11 @@ public class Client {
     }
 
     public Client(String host, int port) {
-        this.session = new ClientSession(new ServerProxy(host, port));
+        this.session = new ClientSession(new Proxy<Message>(host, port));
     }
 
     public Object call(String methodName, Object... params) {
-        long messageId = send(methodName, params);
+        final long messageId = send(methodName, params);
         // XXX Better to wait on condition instead of just polling. Asynchronous
         // call interface would be more natural choice here.
         while (true) {
