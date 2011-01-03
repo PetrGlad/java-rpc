@@ -1,4 +1,8 @@
-Test task given to me by one of potential employers.
+This started as test assignment given to me by one of potential employers.
+I used it as exercise in client/server and concurrency design. 
+BTW they expected me to complete in about 2 hours - it took me about 4 to complete 
+what roughly complies with the specification and I see no way to complete it that 
+fast (without ending up with barely working crap).
 
 In brief, task described multi-service client-server RPC with possible out-of order execution 
 (server may return answers in different order than they were requested).
@@ -8,7 +12,13 @@ Java serialization should be used. Services are configured via configuration fil
 Log4j is used for logging.
 
 Although these requirements look overdesigned I tried to follow them. Also, suggested client-side 
-interface was synchronous but in looks too clumsy in this task - asynchronous calls would fit this architecture better. 
+interface was synchronous but in looks too clumsy in this task 
+- asynchronous calls would fit this architecture better.
+
+The code now can do without any synchronized blocks (except those inside AtomicBoolean and BlockngQueue). 
+Each side of network connection uses two threads: one for receiving and dispatching incoming messages 
+and other to send messages prepared in queue. I like this approach better than using some mutex that 
+orders messages being sent.
 
 Build:
 	gradle build
