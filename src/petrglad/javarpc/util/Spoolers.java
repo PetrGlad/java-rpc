@@ -11,10 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
-import petrglad.javarpc.Utils;
-
 import com.google.common.base.Supplier;
-import com.google.common.io.Closeables;
 
 public final class Spoolers {
     static final Logger LOG = Logger.getLogger(Spoolers.class);
