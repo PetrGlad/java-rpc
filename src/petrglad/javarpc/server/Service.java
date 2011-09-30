@@ -7,6 +7,7 @@ import java.util.List;
 
 import petrglad.javarpc.Message;
 import petrglad.javarpc.Response;
+import petrglad.javarpc.RpcException;
 
 /**
  * Adapts RPC message to service implementation.
@@ -18,13 +19,12 @@ public class Service {
         this.api = implementation;
     }
 
-    private Method getMethod(Message msg) throws SecurityException, NoSuchMethodException {
+    public List<Class<?>> getArgTypes(Message msg) {
         List<Class<?>> argClasses = new ArrayList<Class<?>>();
         for (Object arg : msg.args) {
             argClasses.add(arg.getClass());
         }
-        return api.getClass().getMethod(msg.methodName,
-                argClasses.toArray(new Class[] {}));
+        return argClasses;
     }
 
     /**
@@ -32,12 +32,16 @@ public class Service {
      */
     public Response process(Message msg) {
         final Method m;
+        final List<Class<?>> argTypes = getArgTypes(msg);
         try {
-            m = getMethod(msg);
+            m = api.getClass().getMethod(msg.methodName, argTypes.toArray(new Class[] {}));
         } catch (SecurityException e) {
             return new Response(msg, e);
         } catch (NoSuchMethodException e) {
-            return new Response(msg, e);
+            return new Response(msg,
+                    new RpcException("Method " + msg.methodName + " with parameters " + argTypes
+                            + " is not found.",
+                            e));
         }
         try {
             return new Response(msg, m.invoke(api, msg.args.toArray()));

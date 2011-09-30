@@ -11,6 +11,7 @@ import java.util.concurrent.Future;
 import org.apache.log4j.Logger;
 
 import petrglad.javarpc.Message;
+import petrglad.javarpc.RpcException;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -28,7 +29,7 @@ public class Client {
             } else {
                 LOG.info("Started " + Arrays.toString(args));
                 final Client client = new Client(args[0], Integer.parseInt(args[1]));
-                simpleTest(client);
+                basicTest(client);
                 concurrentTest(client);
                 client.session.close();
                 LOG.info("Finished.");
@@ -38,7 +39,33 @@ public class Client {
         }
     }
 
-    private static void simpleTest(Client client) {
+    private static void basicTest(Client client) {
+        // XXX Use TestNG here?
+        try {
+            // No service
+            client.call("notExistingService.add", 3L, 4L);
+            assert false : "Exception expected";
+        } catch (RpcException e) {
+            assert e.getMessage().matches("Service.+notExistingService.+");
+        }
+        try {
+            // No such method name
+            client.call("calculator.notExistingMethod", 3L, 4L);
+        } catch (RpcException e) {
+            assert e.getMessage().matches("Method.+notExistingMethod.+");
+        }
+        try {
+            // Number of parameters does not match
+            client.call("calculator.add", 3L);
+        } catch (RpcException e) {
+            assert e.getMessage().matches("Method.+add.+");
+        }
+        try {
+            // Types of parameters do not match
+            client.call("calculator.add", "greeting", 1L);
+        } catch (RpcException e) {
+            assert e.getMessage().matches("Method.+add.+");
+        }
         {
             Long v = (Long) client.call("calculator.add", 3L, 4L);
             LOG.info("Add response " + v);
@@ -57,6 +84,11 @@ public class Client {
                 LOG.info("Blow exception " + e);
                 assert "Never succeed".equals(e.getMessage());
             }
+        }
+        {
+            // Method returning void.
+            Object v = client.call("abnormal.voidMethod");
+            assert v == null;
         }
     }
 

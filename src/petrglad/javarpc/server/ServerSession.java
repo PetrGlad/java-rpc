@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 
 import petrglad.javarpc.Message;
 import petrglad.javarpc.Response;
+import petrglad.javarpc.RpcException;
 import petrglad.javarpc.util.Flag;
 import petrglad.javarpc.util.Sink;
 import petrglad.javarpc.util.Spooler;
@@ -69,8 +70,8 @@ public class ServerSession {
         final String[] names = msg.methodName.split("\\.");
         final Service s = services.get(names[0]);
         if (null == s) {
-            enqueueResult(new Response(msg, new RuntimeException("Service "
-                    + names[0] + " is not found.")));
+            enqueueResult(new Response(msg, new RpcException("Service " + names[0]
+                    + " is not found.")));
         } else {
             executor.execute(new Runnable() {
                 @Override
