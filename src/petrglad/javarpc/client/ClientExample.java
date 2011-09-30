@@ -21,6 +21,50 @@ import com.google.common.collect.Sets;
  */
 public class ClientExample {
 
+    private static class Caller implements Runnable {
+        private final int threadNo;
+        private final Client client;
+
+        private Caller(int threadNo, Client client) {
+            this.threadNo = threadNo;
+            this.client = client;
+        }
+
+        @Override
+        public void run() {
+            final int N = 10000;
+            // request->expectedResult
+            final Map<Future<Object>, Long> requests = Maps.newHashMapWithExpectedSize(N);
+            for (long i = 0; i < N; i++)
+                requests.put(client.send("calculator.guess", threadNo, i), threadNo * i);
+            // Now wait for results
+            while (!requests.isEmpty()) {
+                Iterator<Map.Entry<Future<Object>, Long>> i = requests.entrySet()
+                        .iterator();
+                while (i.hasNext()) {
+                    Entry<Future<Object>, Long> entry = i.next();
+                    Future<Object> future = entry.getKey();
+                    if (future.isDone()) {
+                        try {
+                            Object v = future.get();
+                            if (v.equals(entry.getValue()))
+                                LOG.info("Request result=" + v);
+                            else
+                                LOG.error("Request result=" + v + ", expected result="
+                                        + entry.getValue() + ", call=" + future);
+                        } catch (InterruptedException e) {
+                            LOG.error("Request interrupted " + future);
+                        } catch (ExecutionException e) {
+                            LOG.error("Request " + future + " threw an exception: "
+                                    + e.getCause());
+                        }
+                        i.remove();
+                    }
+                }
+            }
+        }
+    }
+
     static final Logger LOG = Logger.getLogger(ClientExample.class);
 
     public static void main(String[] args) {
@@ -104,42 +148,7 @@ public class ClientExample {
     private static void concurrentTest(final Client client) {
         final Set<Thread> threads = Sets.newHashSet();
         for (int ti = 0; ti < 10; ti++) {
-            final long threadNo = ti;
-            final Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    final int N = 10000;
-                    // request->expectedResult
-                    final Map<Future<Object>, Long> requests = Maps.newHashMapWithExpectedSize(N);
-                    for (long i = 0; i < N; i++)
-                        requests.put(client.send("calculator.guess", threadNo, i), threadNo * i);
-                    // Now wait for results
-                    while (!requests.isEmpty()) {
-                        Iterator<Map.Entry<Future<Object>, Long>> i = requests.entrySet()
-                                .iterator();
-                        while (i.hasNext()) {
-                            Entry<Future<Object>, Long> entry = i.next();
-                            Future<Object> future = entry.getKey();
-                            if (future.isDone()) {
-                                try {
-                                    Object v = future.get();
-                                    if (v.equals(entry.getValue()))
-                                        LOG.info("Request result=" + v);
-                                    else
-                                        LOG.error("Request result=" + v + ", expected result="
-                                                + entry.getValue() + ", call=" + future);
-                                } catch (InterruptedException e) {
-                                    LOG.error("Request interrupted " + future);
-                                } catch (ExecutionException e) {
-                                    LOG.error("Request " + future + " threw an exception: "
-                                            + e.getCause());
-                                }
-                                i.remove();
-                            }
-                        }
-                    }
-                }
-            });
+            final Thread t = new Thread(new Caller(ti, client));
             threads.add(t);
             t.setName("Client " + ti);
             t.start();
