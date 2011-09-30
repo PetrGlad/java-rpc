@@ -30,6 +30,7 @@ public class Client {
                 final Client client = new Client(args[0], Integer.parseInt(args[1]));
                 simpleTest(client);
                 concurrentTest(client);
+                client.session.close();
                 LOG.info("Finished.");
             }
         } catch (Throwable e) {
