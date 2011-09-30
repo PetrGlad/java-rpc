@@ -21,9 +21,8 @@ public class Service {
 
     public List<Class<?>> getArgTypes(Message msg) {
         List<Class<?>> argClasses = new ArrayList<Class<?>>();
-        for (Object arg : msg.args) {
+        for (Object arg : msg.args)
             argClasses.add(arg.getClass());
-        }
         return argClasses;
     }
 
@@ -40,8 +39,7 @@ public class Service {
         } catch (NoSuchMethodException e) {
             return new Response(msg,
                     new RpcException("Method " + msg.methodName + " with parameters " + argTypes
-                            + " is not found.",
-                            e));
+                            + " is not found.", e));
         }
         try {
             return new Response(msg, m.invoke(api, msg.args.toArray()));

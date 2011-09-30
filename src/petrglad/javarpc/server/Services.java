@@ -4,30 +4,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Registry of services. 
+ * Registry of services.
  */
 public class Services {
-	Map<String, Service> dispatch = new HashMap<String, Service>();  
-	
-	public Services(Map<String, String> mapping) {
-		initialize(mapping);
-	}
+    Map<String, Service> dispatch = new HashMap<String, Service>();
 
-	private void initialize(Map<String, String> mapping) {
-		for (Map.Entry<String, String> entry : mapping.entrySet()) {
-			dispatch.put(entry.getKey(), newServiceInstance(entry.getValue()));
-		}
-	}
+    public Services(Map<String, String> mapping) {
+        initialize(mapping);
+    }
 
-	private Service newServiceInstance(String className) {		
-		try {
-			return new Service(getClass().getClassLoader().loadClass(className).newInstance());
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public Service get(String serviceName) {
-		return dispatch.get(serviceName);
-	}
+    private void initialize(Map<String, String> mapping) {
+        for (Map.Entry<String, String> entry : mapping.entrySet())
+            dispatch.put(entry.getKey(), newServiceInstance(entry.getValue()));
+    }
+
+    private Service newServiceInstance(String className) {
+        try {
+            return new Service(getClass().getClassLoader().loadClass(className).newInstance());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Service get(String serviceName) {
+        return dispatch.get(serviceName);
+    }
 }

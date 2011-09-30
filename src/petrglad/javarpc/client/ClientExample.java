@@ -17,7 +17,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
- * Example/test RPC client program. 
+ * Example/test RPC client program.
  */
 public class ClientExample {
 
@@ -39,8 +39,7 @@ public class ClientExample {
                 requests.put(client.send("calculator.guess", threadNo, i), threadNo * i);
             // Now wait for results
             while (!requests.isEmpty()) {
-                Iterator<Map.Entry<Future<Object>, Long>> i = requests.entrySet()
-                        .iterator();
+                Iterator<Map.Entry<Future<Object>, Long>> i = requests.entrySet().iterator();
                 while (i.hasNext()) {
                     Entry<Future<Object>, Long> entry = i.next();
                     Future<Object> future = entry.getKey();

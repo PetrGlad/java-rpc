@@ -11,6 +11,7 @@ public class Message implements Serializable {
 	public final List<Object> args;
 
 	public Message(long serialId, String methodName, List<Object> args) {
+	    assert !methodName.isEmpty();
 		this.serialId = serialId;
 		this.methodName = methodName;
 		this.args = args;

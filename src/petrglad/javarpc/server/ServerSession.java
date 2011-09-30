@@ -26,8 +26,6 @@ public class ServerSession {
     // XXX queue is unbounded
     private final BlockingQueue<Response> completedCalls = new LinkedBlockingQueue<Response>();
 
-    private Flag isRunning;
-
     public ServerSession(Services services, Socket socket, Executor executor) {
         assert null != socket;
         assert null != services;
@@ -35,10 +33,14 @@ public class ServerSession {
         this.socket = socket;
         this.services = services;
         this.executor = executor;
-        this.isRunning = Spoolers.getIsSocketOpen(socket);
     }
 
-    private void startRequestReader() {
+    public void open() {
+        final Flag isRunning = Spoolers.getIsSocketOpen(socket);
+        Spoolers.startThread("Response writer", new Spooler<Response>( //
+                Spoolers.bufferSupplier(completedCalls, isRunning), //
+                Spoolers.<Response> socketWriter(socket), //
+                isRunning));
         Spoolers.startThread("Request reader", new Spooler<Object>( //
                 Spoolers.socketReader(socket), //
                 new Sink<Object>() {
@@ -47,13 +49,6 @@ public class ServerSession {
                         process(v);
                     }
                 },
-                isRunning));
-    }
-
-    private void startResponseWriter() {
-        Spoolers.startThread("Response writer", new Spooler<Response>( //
-                Spoolers.bufferSupplier(completedCalls, isRunning), //
-                Spoolers.<Response> socketWriter(socket), //
                 isRunning));
     }
 
@@ -95,10 +90,5 @@ public class ServerSession {
                 return;
             } catch (InterruptedException e) {
             }
-    }
-
-    public void open() {
-        startResponseWriter();
-        startRequestReader();
     }
 }

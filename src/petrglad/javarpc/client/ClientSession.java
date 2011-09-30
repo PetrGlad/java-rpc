@@ -142,8 +142,7 @@ public class ClientSession implements Closeable {
         serverProxy.close();
     }
 
-    private Message newMessage(String qualifiedMethodName, List<Object> args) {
-        assert !qualifiedMethodName.isEmpty();
+    private Message newMessage(String qualifiedMethodName, List<Object> args) {        
         return new Message(messageSerialId.incrementAndGet(), qualifiedMethodName, args);
     }
 

@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 
 import petrglad.javarpc.Utils;
 import petrglad.javarpc.server.ServerSession;
+import petrglad.javarpc.util.Flag;
 import petrglad.javarpc.util.Sink;
 import petrglad.javarpc.util.Spooler;
 import petrglad.javarpc.util.Spoolers;
@@ -27,8 +28,8 @@ public class Proxy<T> implements Closeable {
 
     private final String host;
     private final int port;
+    private Socket socket;
 
-    private Socket socket = null;
     /**
      * Place for received messages.
      */
@@ -55,7 +56,6 @@ public class Proxy<T> implements Closeable {
 
     public void open() {
         assert null == socket;
-        assert null != receivedSink && null != sendSource;
         try {
             socket = new Socket(host, port);
         } catch (UnknownHostException e) {
@@ -63,16 +63,13 @@ public class Proxy<T> implements Closeable {
         } catch (IOException e) {
             throw new RuntimeException("Could not open connection to " + host);
         }
+
+        assert null != receivedSink && null != sendSource;
+        final Flag isRunning = Spoolers.getIsSocketOpen(socket);
         Spoolers.startThread("Client reader",
-                new Spooler<Object>(
-                        Spoolers.socketReader(socket),
-                        receivedSink,
-                        Spoolers.getIsSocketOpen(socket)));
+                new Spooler<Object>(Spoolers.socketReader(socket), receivedSink, isRunning));
         Spoolers.startThread("Client sender",
-                new Spooler<T>(
-                        sendSource,
-                        Spoolers.<T> socketWriter(socket),
-                        Spoolers.getIsSocketOpen(socket)));
+                new Spooler<T>(sendSource, Spoolers.<T> socketWriter(socket), isRunning));
     }
 
     @Override
