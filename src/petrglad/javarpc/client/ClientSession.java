@@ -106,7 +106,7 @@ public class ClientSession implements Closeable {
 
     private final BlockingQueue<Message> sendQueue = new LinkedBlockingDeque<Message>();
 
-    private final Map<Long, Result> responses = Collections
+    private final Map<Long, Result> results = Collections
             .synchronizedMap(new HashMap<Long, Result>());
     boolean isClosed = false;
 
@@ -137,7 +137,7 @@ public class ClientSession implements Closeable {
             @Override
             public void put(Object v) {
                 final Response r = (Response) v;
-                Result result = responses.remove(r.serialId);
+                Result result = results.remove(r.serialId);
                 if (result == null)
                     LOG.error("Response with id " + r.serialId + " is not expected.");
                 else
@@ -153,9 +153,9 @@ public class ClientSession implements Closeable {
 
     public Future<Object> send(String methodName, List<Object> args) {
         final Message m = newMessage(methodName, args);
-        sendQueue.offer(m);
         final Result result = new Result(m.serialId);
-        responses.put(m.serialId, result);
+        results.put(m.serialId, result);
+        sendQueue.offer(m);
         return result;
     }
 }
