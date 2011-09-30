@@ -16,6 +16,7 @@ dependencies {
 sourceSets {
     main {
         java.srcDir "$projectDir/src"
+        resources.srcDir "$projectDir/src"
     }
 }
 
