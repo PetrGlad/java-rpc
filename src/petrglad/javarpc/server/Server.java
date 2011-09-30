@@ -3,6 +3,7 @@ package petrglad.javarpc.server;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
@@ -17,6 +18,8 @@ import org.apache.log4j.Logger;
 
 import petrglad.javarpc.Utils;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 public class Server implements Runnable {
 
     static final Logger LOG = Logger.getLogger(Server.class);
@@ -25,15 +28,13 @@ public class Server implements Runnable {
     private final int port;
     private final ThreadPoolExecutor executor;
 
-    public static void main(String[] args) throws FileNotFoundException,
-            IOException {
+    public static void main(String[] args) {
         try {
             LOG.info("Starting server. Args: " + Arrays.toString(args));
             if (args.length < 2) {
                 System.out.println("USAGE: Server services_config port_number");
             } else {
-                Server s = new Server(new Services(loadConfig(args)),
-                        Integer.parseInt(args[1]));
+                Server s = new Server(new Services(loadConfig(args)), Integer.parseInt(args[1]));
                 s.run();
             }
         } catch (Throwable e) {
@@ -47,9 +48,8 @@ public class Server implements Runnable {
         Properties config = new Properties();
         config.load(new FileInputStream(args[0]));
         final Map<String, String> serviceConfig = new HashMap<String, String>();
-        for (Object key : config.keySet()) {
+        for (Object key : config.keySet())
             serviceConfig.put((String) key, (String) config.get(key));
-        }
         return serviceConfig;
     }
 
@@ -59,7 +59,16 @@ public class Server implements Runnable {
         // TODO Implement graceful shutdown.
         // XXX Queue is unbounded.
         this.executor = new ThreadPoolExecutor(2, 16, 10, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<Runnable>());
+                new LinkedBlockingQueue<Runnable>(),
+                new ThreadFactoryBuilder()
+                        .setNameFormat("server-executor-worker-%s")
+                        .setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+                            @Override
+                            public void uncaughtException(Thread t, Throwable e) {
+                                LOG.error("Caught exception in thread " + t.getName(), e);
+                            }
+                        })
+                        .build());
     }
 
     @Override
@@ -67,8 +76,7 @@ public class Server implements Runnable {
         ServerSocket socket = null;
         try {
             socket = new ServerSocket(port);
-            LOG.info("Server is accepting connections on "
-                    + socket.getLocalSocketAddress());
+            LOG.info("Server is accepting connections on " + socket.getLocalSocketAddress());
             while (!socket.isClosed())
                 newConnection(socket.accept());
         } catch (Exception e) {

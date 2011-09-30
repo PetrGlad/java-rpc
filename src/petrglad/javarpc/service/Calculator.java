@@ -10,10 +10,12 @@ public class Calculator {
 		return a + b;
 	}
 
+	/**
+	 * Example of some "long running" operation.
+	 */
 	public Long guess(Long a, Long b) {
 		try {
-			// Thread.sleep(0, random.nextInt(999999));
-			Thread.sleep(20);
+			Thread.sleep(0, random.nextInt(9999));			
 		} catch (InterruptedException e) {
 		}
 		return a * b;

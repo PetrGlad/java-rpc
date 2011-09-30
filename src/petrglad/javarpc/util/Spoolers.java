@@ -13,12 +13,19 @@ import org.apache.log4j.Logger;
 
 import com.google.common.base.Supplier;
 
+/**
+ * Utilities for writing and reading message queues. 
+ */
 public final class Spoolers {
     static final Logger LOG = Logger.getLogger(Spoolers.class);
 
     private Spoolers() {
     }
 
+    /**
+     * @return Supplier that continuously reads Java-serialized objects from
+     *         given socket and returns them.
+     */
     public static Supplier<Object> socketReader(final Socket socket) {
         try {
             return new Supplier<Object>() {
@@ -43,6 +50,9 @@ public final class Spoolers {
         }
     }
 
+    /**
+     * @return Sink that writes given Java-serialized objects to socket.
+     */
     public static <T> Sink<T> socketWriter(final Socket socket) {
         try {
             return new Sink<T>() {
@@ -68,12 +78,16 @@ public final class Spoolers {
         return new Sink<T>() {
             @Override
             public void put(T v) {
-                // TODO loop until succeeded
+                // TODO loop until succeeded?
                 queue.offer(v);
             };
         };
     }
 
+    /**
+     * @return Supplier that continuously polls given queue until succeeded.
+     *         Loop can be stopped by isRunning flag.
+     */
     public static <T> Supplier<T> bufferSupplier(final BlockingQueue<T> queue, final Flag isRunning) {
         return new Supplier<T>() {
             @Override
@@ -84,7 +98,7 @@ public final class Spoolers {
                         if (null != v)
                             return v;
                     } catch (InterruptedException e) {
-                    }                    
+                    }
                 }
                 return null;
             };

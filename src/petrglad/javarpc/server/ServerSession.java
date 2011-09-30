@@ -45,7 +45,7 @@ public class ServerSession {
                     public void put(Object v) {
                         process(v);
                     }
-                }, //
+                },
                 isRunning));
     }
 
@@ -56,6 +56,10 @@ public class ServerSession {
                 isRunning));
     }
 
+    /**
+     * Dispatch message object to appropriate service or send error result
+     * immediately if it can not be dispatched.
+     */
     private void process(final Object o) {
         if (!(o instanceof Message))
             // XXX Write some error response here?
@@ -72,8 +76,7 @@ public class ServerSession {
                 @Override
                 public void run() {
                     try {
-                        enqueueResult(s.process(new Message(msg.serialId,
-                                names[1], msg.args)));
+                        enqueueResult(s.process(new Message(msg.serialId, names[1], msg.args)));
                     } catch (Exception e) {
                         enqueueResult(new Response(msg, e));
                     }

@@ -3,6 +3,9 @@ package petrglad.javarpc.server;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Registry of services. 
+ */
 public class Services {
 	Map<String, Service> dispatch = new HashMap<String, Service>();  
 	
