@@ -25,3 +25,10 @@ Build:
 Run:
 	Server services.config port
 	Client serverHost port
+
+Example command lines:
+	java -cp build/libs/java-rpc-0.1.jar petrglad.javarpc.server.Server services.config 12333
+	java -cp build/libs/java-rpc-0.1.jar petrglad.javarpc.client.Client 127.0.0.1 12333
+
+Client output (log) is in client.log
+

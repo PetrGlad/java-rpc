@@ -10,11 +10,21 @@ repositories {
 
 dependencies {
     compile group: 'log4j', name: 'log4j', version: '1.2.16'
-    compile group: 'com.google.guava', name:'guava', version:'r07'
+    compile group: 'com.google.guava', name:'guava', version:'r09'
 }
 
 sourceSets {
     main {
         java.srcDir "$projectDir/src"
+    }
+}
+
+jar {
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+	
+    manifest {
+        attributes 'Implementation-Title': 'Java RPC server.',
+                   'Implementation-Version': version,
+                   'Main-Class': 'petrglad.javarpc.server.Server'
     }
 }
