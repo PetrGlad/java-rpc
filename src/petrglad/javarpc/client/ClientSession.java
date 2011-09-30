@@ -112,8 +112,21 @@ public class ClientSession implements Closeable {
 
     public ClientSession(Proxy<Message> server) {
         serverProxy = server;
-        serverProxy.attach(newReceiver(), //
-                Spoolers.bufferSupplier(sendQueue, //
+        serverProxy.attach(
+                // Receives messages from server:
+                new Sink<Object>() {
+                    @Override
+                    public void put(Object v) {
+                        final Response r = (Response) v;
+                        Result result = results.remove(r.serialId);
+                        if (result == null)
+                            LOG.error("Response with id " + r.serialId + " is not expected.");
+                        else
+                            result.setResponse(r);
+                    }
+                },
+                // Provides messages to be sent:
+                Spoolers.bufferSupplier(sendQueue,
                         new Flag() {
                             @Override
                             public Boolean get() {
@@ -129,30 +142,13 @@ public class ClientSession implements Closeable {
         serverProxy.close();
     }
 
-    /**
-     * @return Receiver for messages returned from server.
-     */
-    private Sink<Object> newReceiver() {
-        return new Sink<Object>() {
-            @Override
-            public void put(Object v) {
-                final Response r = (Response) v;
-                Result result = results.remove(r.serialId);
-                if (result == null)
-                    LOG.error("Response with id " + r.serialId + " is not expected.");
-                else
-                    result.setResponse(r);
-            }
-        };
+    private Message newMessage(String qualifiedMethodName, List<Object> args) {
+        assert !qualifiedMethodName.isEmpty();
+        return new Message(messageSerialId.incrementAndGet(), qualifiedMethodName, args);
     }
 
-    private Message newMessage(String target, List<Object> args) {
-        assert !target.isEmpty();
-        return new Message(messageSerialId.incrementAndGet(), target, args);
-    }
-
-    public Future<Object> send(String methodName, List<Object> args) {
-        final Message m = newMessage(methodName, args);
+    public Future<Object> send(String qualifiedMethodName, List<Object> args) {
+        final Message m = newMessage(qualifiedMethodName, args);
         final Result result = new Result(m.serialId);
         results.put(m.serialId, result);
         sendQueue.offer(m);

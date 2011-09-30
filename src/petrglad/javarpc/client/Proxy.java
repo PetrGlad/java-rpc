@@ -29,7 +29,14 @@ public class Proxy<T> implements Closeable {
     private final int port;
 
     private Socket socket = null;
+    /**
+     * Place for received messages.
+     */
     Sink<Object> receivedSink;
+
+    /**
+     * Source of messages to be sent.
+     */
     Supplier<T> sendSource;
 
     public Proxy(String host, int port) {
@@ -56,15 +63,15 @@ public class Proxy<T> implements Closeable {
         } catch (IOException e) {
             throw new RuntimeException("Could not open connection to " + host);
         }
-        Spoolers.startThread("Client reader", //
-                new Spooler<Object>( //
-                        Spoolers.socketReader(socket), //
-                        receivedSink, //
+        Spoolers.startThread("Client reader",
+                new Spooler<Object>(
+                        Spoolers.socketReader(socket),
+                        receivedSink,
                         Spoolers.getIsSocketOpen(socket)));
-        Spoolers.startThread("Client sender", //
-                new Spooler<T>( //
-                        sendSource, //
-                        Spoolers.<T> socketWriter(socket), //
+        Spoolers.startThread("Client sender",
+                new Spooler<T>(
+                        sendSource,
+                        Spoolers.<T> socketWriter(socket),
                         Spoolers.getIsSocketOpen(socket)));
     }
 
