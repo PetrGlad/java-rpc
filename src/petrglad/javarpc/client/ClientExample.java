@@ -35,8 +35,13 @@ public class ClientExample {
             final int N = 10000;
             // request->expectedResult
             final Map<Future<Object>, Long> requests = Maps.newHashMapWithExpectedSize(N);
-            for (long i = 0; i < N; i++)
-                requests.put(client.send("calculator.guess", threadNo, i), threadNo * i);
+            for (long i = 0; i < N; i++) {
+                Future<Object> result = client.send("calculator.guess", (long) threadNo, i);
+                if (result == null)
+                    LOG.error("Can not send request t=" + threadNo + ", i=" + i);
+                else
+                    requests.put(result, threadNo * i);
+            }
             // Now wait for results
             while (!requests.isEmpty()) {
                 Iterator<Map.Entry<Future<Object>, Long>> i = requests.entrySet().iterator();

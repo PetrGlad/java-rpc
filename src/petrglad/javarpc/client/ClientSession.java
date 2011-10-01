@@ -1,14 +1,14 @@
 package petrglad.javarpc.client;
 
 import java.io.Closeable;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -17,9 +17,7 @@ import org.apache.log4j.Logger;
 
 import petrglad.javarpc.Message;
 import petrglad.javarpc.Response;
-import petrglad.javarpc.util.Flag;
 import petrglad.javarpc.util.Sink;
-import petrglad.javarpc.util.Spoolers;
 
 /**
  * Client-side RPC session.
@@ -102,18 +100,14 @@ public class ClientSession implements Closeable {
 
     private final AtomicLong messageSerialId = new AtomicLong(0);
 
-    private final Proxy<Message> serverProxy;
-
-    private final BlockingQueue<Message> sendQueue = new LinkedBlockingDeque<Message>();
+    private final BufferedSendProxy<Message> serverProxy;
 
     private final Map<Long, Result> results = Collections
             .synchronizedMap(new HashMap<Long, Result>());
-    boolean isClosed = false;
 
-    public ClientSession(Proxy<Message> server) {
-        serverProxy = server;
-        serverProxy.attach(
-                // Receives messages from server:
+    public ClientSession(Socket socket) {
+        serverProxy = new BufferedSendProxy<Message>(socket,
+                // Receives messages from server
                 new Sink<Object>() {
                     @Override
                     public void put(Object v) {
@@ -124,33 +118,31 @@ public class ClientSession implements Closeable {
                         else
                             result.setResponse(r);
                     }
-                },
-                // Provides messages to be sent:
-                Spoolers.bufferSupplier(sendQueue,
-                        new Flag() {
-                            @Override
-                            public Boolean get() {
-                                return !isClosed;
-                            }
-                        }));
-        serverProxy.open();
+                });
     }
 
     @Override
-    public void close() {
-        isClosed = true;
+    public void close() throws IOException {
         serverProxy.close();
     }
 
-    private Message newMessage(String qualifiedMethodName, List<Object> args) {        
+    private Message newMessage(String qualifiedMethodName, List<Object> args) {
         return new Message(messageSerialId.incrementAndGet(), qualifiedMethodName, args);
     }
 
+    /**
+     * @return Future that provides result of remote method invocation, or null
+     *         if there was an error.
+     */
     public Future<Object> send(String qualifiedMethodName, List<Object> args) {
         final Message m = newMessage(qualifiedMethodName, args);
         final Result result = new Result(m.serialId);
         results.put(m.serialId, result);
-        sendQueue.offer(m);
-        return result;
+        if (serverProxy.send(m))
+            return result;
+        else {
+            results.remove(m.serialId);
+            return null;
+        }
     }
 }

@@ -16,4 +16,10 @@ public class Message implements Serializable {
 		this.methodName = methodName;
 		this.args = args;
 	}
+
+    @Override
+    public String toString() {
+        return "Message [serialId=" + serialId + ", methodName=" + methodName + ", args=" + args
+                + "]";
+    }
 }

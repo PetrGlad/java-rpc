@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
 import com.google.common.base.Supplier;
 
 /**
- * Utilities for writing and reading message queues. 
+ * Utilities for writing and reading message queues.
  */
 public final class Spoolers {
     static final Logger LOG = Logger.getLogger(Spoolers.class);
@@ -22,32 +22,35 @@ public final class Spoolers {
     private Spoolers() {
     }
 
+    public static ObjectInputStream getObjectInputStream(final Socket socket) {
+        try {
+            return new ObjectInputStream(socket.getInputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
     /**
      * @return Supplier that continuously reads Java-serialized objects from
      *         given socket and returns them.
      */
-    public static Supplier<Object> socketReader(final Socket socket) {
-        try {
-            return new Supplier<Object>() {
-                final ObjectInputStream oIn = new ObjectInputStream(
-                        socket.getInputStream());
-
-                @Override
-                public Object get() {
-                    try {
-                        return oIn.readObject();
-                    } catch (EOFException e) {
-                        LOG.info("Remote side closed connection "
-                                + socket.getRemoteSocketAddress());
-                        return null;
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+    public static Supplier<Object> socketReader(final Socket socket) {        
+        return new Supplier<Object>() {
+            final ObjectInputStream oIn = getObjectInputStream(socket);
+            @Override
+            public Object get() {
+                try {
+                    return oIn.readObject();
+                } catch (EOFException e) {
+                    LOG.info("Remote side closed connection "
+                            + socket.getRemoteSocketAddress());
+                    return null;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
-            };
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+            }
+        };
     }
 
     /**
@@ -116,17 +119,5 @@ public final class Spoolers {
             }
         });
         t.start();
-    }
-
-    /**
-     * @return Stop condition for spoolers.
-     */
-    public static Flag getIsSocketOpen(final Socket socket) {
-        return new Flag() {
-            @Override
-            public Boolean get() {
-                return !socket.isClosed();
-            }
-        };
     }
 }

@@ -26,4 +26,9 @@ public class Response implements Serializable {
 		else
 			return null;
 	}
+
+    @Override
+    public String toString() {
+        return "Response [serialId=" + serialId + ", value=" + value + "]";
+    }
 }

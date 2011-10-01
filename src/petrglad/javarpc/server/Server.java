@@ -57,8 +57,8 @@ public class Server implements Runnable {
         this.services = services;
         this.port = port;
         // TODO Implement graceful shutdown.
-        // XXX Queue is unbounded.
         this.executor = new ThreadPoolExecutor(2, 16, 10, TimeUnit.SECONDS,
+                // XXX Queue is unbounded.
                 new LinkedBlockingQueue<Runnable>(),
                 new ThreadFactoryBuilder()
                         .setNameFormat("server-executor-worker-%s")
@@ -73,22 +73,24 @@ public class Server implements Runnable {
 
     @Override
     public void run() {
-        ServerSocket socket = null;
         try {
-            socket = new ServerSocket(port);
-            LOG.info("Server is accepting connections on " + socket.getLocalSocketAddress());
-            while (!socket.isClosed())
-                newConnection(socket.accept());
+            ServerSocket socket = new ServerSocket(port);
+            try {
+                LOG.info("Server is accepting connections on " + socket.getLocalSocketAddress());
+                while (!socket.isClosed())
+                    newConnection(socket.accept());
+            } finally {
+                Utils.closeSocket(socket);
+            }
         } catch (Exception e) {
             // TODO Log error here.
             throw new RuntimeException(e);
-        } finally {
-            Utils.closeSocket(socket);
         }
+
     }
 
     private void newConnection(Socket socket) {
         LOG.info("Accepted client connection " + socket.getRemoteSocketAddress());
-        new ServerSession(services, socket, executor).open();
+        new ServerSession(services, socket, executor);
     }
 }

@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import petrglad.javarpc.Message;
+import petrglad.javarpc.util.Sockets;
 
 /**
  * Convenience wrapper for ClientSession. Adds synchronous call method.
@@ -16,7 +16,7 @@ public class Client implements Closeable {
     final private ClientSession session;
 
     public Client(String host, int port) {
-        this.session = new ClientSession(new Proxy<Message>(host, port));
+        this.session = new ClientSession(Sockets.openClientSocket(host, port));
     }
 
     /**
@@ -25,7 +25,11 @@ public class Client implements Closeable {
      */
     public Object call(String methodName, Object... params) {
         try {
-            return send(methodName, params).get();
+            final Future<Object> result = send(methodName, params);
+            if (result == null)
+                throw new RuntimeException("Can not send request.");
+            else
+                return result.get();
         } catch (ExecutionException e) {
             throw (RuntimeException) e.getCause();
         } catch (InterruptedException e) {
