@@ -5,7 +5,8 @@ import org.apache.log4j.Logger;
 import com.google.common.base.Supplier;
 
 /**
- * Runnable that sequentially processes messages from input queue with given processor.
+ * Runnable that sequentially processes messages from input queue with given
+ * processor.
  * 
  * TODO (refactoring) Use service classes from guava here?
  * 

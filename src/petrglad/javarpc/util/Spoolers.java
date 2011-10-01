@@ -35,9 +35,10 @@ public final class Spoolers {
      * @return Supplier that continuously reads Java-serialized objects from
      *         given socket and returns them.
      */
-    public static Supplier<Object> socketReader(final Socket socket) {        
+    public static Supplier<Object> socketReader(final Socket socket) {
         return new Supplier<Object>() {
             final ObjectInputStream oIn = getObjectInputStream(socket);
+
             @Override
             public Object get() {
                 try {

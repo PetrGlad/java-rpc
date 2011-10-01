@@ -13,6 +13,9 @@ import com.google.common.base.Supplier;
 
 /**
  * Handles connection to server and message serialization.
+ * 
+ * @param <T>
+ *            type of messages that this proxy sends.
  */
 public class Proxy<T> implements Closeable {
 

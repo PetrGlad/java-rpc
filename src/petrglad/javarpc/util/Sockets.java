@@ -9,10 +9,10 @@ import org.apache.log4j.Logger;
 
 public final class Sockets {
     static final Logger LOG = Logger.getLogger(Sockets.class);
-    
-    private Sockets() {    
-    }    
-    
+
+    private Sockets() {
+    }
+
     public static Socket openClientSocket(final String host, final int port) {
         try {
             return new Socket(host, port);
@@ -42,7 +42,7 @@ public final class Sockets {
             LOG.error("Error closing server socket " + socket, e);
         }
     }
-    
+
     public static void closeSocket(final Socket socket) {
         try {
             socket.close();
