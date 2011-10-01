@@ -5,10 +5,10 @@ import java.util.concurrent.Executor;
 
 import org.apache.log4j.Logger;
 
+import petrglad.javarpc.BufferedSendProxy;
 import petrglad.javarpc.Message;
 import petrglad.javarpc.Response;
 import petrglad.javarpc.RpcException;
-import petrglad.javarpc.client.BufferedSendProxy;
 import petrglad.javarpc.util.Sink;
 
 public class ServerSession {

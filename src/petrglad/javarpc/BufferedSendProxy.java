@@ -1,4 +1,4 @@
-package petrglad.javarpc.client;
+package petrglad.javarpc;
 
 import java.io.Closeable;
 import java.io.IOException;

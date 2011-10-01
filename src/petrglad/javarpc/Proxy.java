@@ -1,4 +1,4 @@
-package petrglad.javarpc.client;
+package petrglad.javarpc;
 
 import java.io.Closeable;
 import java.net.Socket;
@@ -10,7 +10,6 @@ import petrglad.javarpc.util.Spooler;
 import petrglad.javarpc.util.Spoolers;
 
 import com.google.common.base.Supplier;
-import com.sun.org.apache.xml.internal.serializer.utils.Utils;
 
 /**
  * Handles connection to server and message serialization.

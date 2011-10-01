@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.log4j.Logger;
 
+import petrglad.javarpc.BufferedSendProxy;
 import petrglad.javarpc.Message;
 import petrglad.javarpc.Response;
 import petrglad.javarpc.util.Sink;
