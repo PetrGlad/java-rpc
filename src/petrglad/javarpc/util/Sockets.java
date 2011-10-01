@@ -1,10 +1,15 @@
 package petrglad.javarpc.util;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import org.apache.log4j.Logger;
+
 public final class Sockets {
+    static final Logger LOG = Logger.getLogger(Sockets.class);
+    
     private Sockets() {    
     }    
     
@@ -28,5 +33,21 @@ public final class Sockets {
                 return !socket.isClosed();
             }
         };
+    }
+
+    public static void closeSocket(final ServerSocket socket) {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            LOG.error("Error closing server socket " + socket, e);
+        }
+    }
+    
+    public static void closeSocket(final Socket socket) {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            LOG.error("Error closing socket " + socket, e);
+        }
     }
 }

@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
-import petrglad.javarpc.Utils;
+import petrglad.javarpc.util.Sockets;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -80,7 +80,7 @@ public class Server implements Runnable {
                 while (!socket.isClosed())
                     newConnection(socket.accept());
             } finally {
-                Utils.closeSocket(socket);
+                Sockets.closeSocket(socket);
             }
         } catch (Exception e) {
             // TODO Log error here.
