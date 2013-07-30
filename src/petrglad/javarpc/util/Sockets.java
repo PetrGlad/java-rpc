@@ -17,9 +17,9 @@ public final class Sockets {
         try {
             return new Socket(host, port);
         } catch (UnknownHostException e) {
-            throw new RuntimeException("Host is not found " + host + ":" + port);
+            throw new RuntimeException("Host is not found " + host + ":" + port, e);
         } catch (IOException e) {
-            throw new RuntimeException("Could not open connection to " + host);
+            throw new RuntimeException("Could not open connection to " + host, e);
         }
     }
 
