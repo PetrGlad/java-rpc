@@ -16,8 +16,6 @@ import petrglad.javarpc.util.Spoolers;
 /**
  * Common pattern of sending messages to socket via queue and handing out every
  * received message to a sink.
- * 
- * @param <T>
  */
 public class BufferedSendProxy<T> implements Closeable {
 

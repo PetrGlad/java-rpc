@@ -1,17 +1,14 @@
 This started as test assignment given to me by one of potential employers.
 I used it as exercise in client/server and concurrency design. 
 
-In brief, task described multi-service client-server RPC with possible out-of order execution 
-(server may return answers in different order than they were requested).
-Server should accept clients in single thread and accept commands in per-client threads 
-and use pool of threads to process them.
+In brief, task described multi-service client-server RPC with possible out-of order execution (server may return answers in different order than they were requested).
+Server should accept clients in single thread and accept commands in per-client threads and use pool of threads to process them.
 Java serialization should be used. Services are configured via configuration file. 
 Log4j is used for logging.
 
 The code now can do without any synchronized blocks (except those inside AtomicBoolean, BlockngQueue and Future). 
-Each side of network connection uses two threads: one for receiving and dispatching incoming messages 
-and other to send messages prepared in queue. I like this approach better than using some mutex that 
-orders messages being sent.
+Each side of network connection uses two threads: one for receiving and dispatching incoming messages and other to send messages prepared in queue.
+I like this approach better than using some mutex that orders messages being sent.
 
 Build:
 	gradle build
