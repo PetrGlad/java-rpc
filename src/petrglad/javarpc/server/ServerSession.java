@@ -22,15 +22,10 @@ public class ServerSession {
         assert null != services;
         this.services = services;
         this.executor = executor;
-        this.clientProxy = new BufferedSendProxy<Response>(
+        this.clientProxy = new BufferedSendProxy<>(
                 socket,
                 // Receives messages from client
-                new Sink<Object>() {
-                    @Override
-                    public void put(Object v) {
-                        process(v);
-                    }
-                });
+                ServerSession.this::process);
     }
 
     /**
@@ -49,14 +44,11 @@ public class ServerSession {
             clientProxy.send(new Response(msg, new RpcException("Service " + names[0]
                     + " is not found.")));
         } else {
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        clientProxy.send(s.process(new Message(msg.serialId, names[1], msg.args)));
-                    } catch (Exception e) {
-                        clientProxy.send(new Response(msg, e));
-                    }
+            executor.execute(() -> {
+                try {
+                    clientProxy.send(s.process(new Message(msg.serialId, names[1], msg.args)));
+                } catch (Exception e) {
+                    clientProxy.send(new Response(msg, e));
                 }
             });
         }

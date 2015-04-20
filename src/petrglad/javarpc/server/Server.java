@@ -47,7 +47,7 @@ public class Server implements Runnable {
         // XXX (refactoring) Better way to get String->String?
         Properties config = new Properties();
         config.load(new FileInputStream(args[0]));
-        final Map<String, String> serviceConfig = new HashMap<String, String>();
+        final Map<String, String> serviceConfig = new HashMap<>();
         for (Object key : config.keySet())
             serviceConfig.put((String) key, (String) config.get(key));
         return serviceConfig;
@@ -58,7 +58,7 @@ public class Server implements Runnable {
         this.port = port;
         this.executor = new ThreadPoolExecutor(2, 16, 10, TimeUnit.SECONDS,
                 // XXX Queue is unbounded.
-                new LinkedBlockingQueue<Runnable>(),
+                new LinkedBlockingQueue<>(),
                 new ThreadFactoryBuilder()
                         .setNameFormat("server-executor-worker-%s")
                         .setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
@@ -68,12 +68,7 @@ public class Server implements Runnable {
                             }
                         })
                         .build());
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                executor.shutdown();
-            }
-        });
+        Runtime.getRuntime().addShutdownHook(new Thread(executor::shutdown));
     }
 
     @Override

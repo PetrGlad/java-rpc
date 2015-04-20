@@ -33,7 +33,7 @@ public class Service {
         final Method m;
         final List<Class<?>> argTypes = getArgTypes(msg);
         try {
-            m = api.getClass().getMethod(msg.methodName, argTypes.toArray(new Class[] {}));
+            m = api.getClass().getMethod(msg.methodName, argTypes.toArray(new Class[argTypes.size()]));
         } catch (SecurityException e) {
             return new Response(msg, e);
         } catch (NoSuchMethodException e) {

@@ -22,7 +22,7 @@ public class BufferedSendProxy<T> implements Closeable {
     static final Logger LOG = Logger.getLogger(BufferedSendProxy.class);
 
     // XXX queue is unbounded
-    private final BlockingQueue<T> sendQueue = new LinkedBlockingDeque<T>();
+    private final BlockingQueue<T> sendQueue = new LinkedBlockingDeque<>();
 
     private final Proxy<T> proxy;
 

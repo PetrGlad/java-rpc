@@ -7,7 +7,7 @@ import java.util.Map;
  * Registry of services.
  */
 public class Services {
-    Map<String, Service> dispatch = new HashMap<String, Service>();
+    Map<String, Service> dispatch = new HashMap<>();
 
     public Services(Map<String, String> mapping) {
         initialize(mapping);

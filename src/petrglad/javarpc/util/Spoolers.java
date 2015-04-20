@@ -79,13 +79,8 @@ public final class Spoolers {
     }
 
     public static <T> Sink<T> bufferSink(final BlockingQueue<T> queue) {
-        return new Sink<T>() {
-            @Override
-            public void put(T v) {
-                // TODO loop until succeeded?
-                queue.offer(v);
-            };
-        };
+        // TODO retry until succeeded?
+        return queue::offer;
     }
 
     /**
@@ -93,19 +88,16 @@ public final class Spoolers {
      *         Loop can be stopped by isRunning flag.
      */
     public static <T> Supplier<T> bufferSupplier(final BlockingQueue<T> queue, final Flag isRunning) {
-        return new Supplier<T>() {
-            @Override
-            public T get() {
-                while (isRunning.get()) {
-                    try {
-                        T v = queue.poll(3, TimeUnit.SECONDS);
-                        if (null != v)
-                            return v;
-                    } catch (InterruptedException e) {
-                    }
+        return () -> {
+            while (isRunning.get()) {
+                try {
+                    T v = queue.poll(3, TimeUnit.SECONDS);
+                    if (null != v)
+                        return v;
+                } catch (InterruptedException e) {
                 }
-                return null;
-            };
+            }
+            return null;
         };
     }
 
@@ -113,12 +105,7 @@ public final class Spoolers {
         final Thread t = new Thread(proc);
         t.setDaemon(true);
         t.setName(name);
-        t.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                LOG.error("Exception in spooler thread " + t.getName(), e);
-            }
-        });
+        t.setUncaughtExceptionHandler((t1, e) -> LOG.error("Exception in spooler thread " + t1.getName(), e));
         t.start();
     }
 }

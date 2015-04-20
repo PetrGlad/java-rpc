@@ -27,12 +27,7 @@ public final class Sockets {
      * @return Stop condition for spoolers.
      */
     public static Flag getIsSocketOpen(final Socket socket) {
-        return new Flag() {
-            @Override
-            public Boolean get() {
-                return !socket.isClosed();
-            }
-        };
+        return () -> !socket.isClosed();
     }
 
     public static void closeSocket(final ServerSocket socket) {

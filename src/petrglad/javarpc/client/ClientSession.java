@@ -104,10 +104,10 @@ public class ClientSession implements Closeable {
     private final BufferedSendProxy<Message> serverProxy;
 
     private final Map<Long, Result> results = Collections
-            .synchronizedMap(new HashMap<Long, Result>());
+            .synchronizedMap(new HashMap<>());
 
     public ClientSession(Socket socket) {
-        serverProxy = new BufferedSendProxy<Message>(socket,
+        serverProxy = new BufferedSendProxy<>(socket,
                 // Receives messages from server
                 new Sink<Object>() {
                     @Override
