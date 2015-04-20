@@ -3,6 +3,7 @@ package petrglad.javarpc.client;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -37,11 +38,11 @@ public class Client implements Closeable {
         }
     }
 
-    public Future<Object> send(String qualifiedMethodName, Object... params) {
+    public CompletableFuture<Object> send(String qualifiedMethodName, Object... params) {
         return session.send(qualifiedMethodName, Arrays.asList(params));
     }
 
-    public Future<Object> send(String serviceName, String methodName, Object... params) {
+    public CompletableFuture<Object> send(String serviceName, String methodName, Object... params) {
         return session.send(serviceName + "." + methodName, Arrays.asList(params));
     }
 

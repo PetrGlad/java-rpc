@@ -71,7 +71,7 @@ public class ClientSession implements Closeable {
      * @return Future that provides result of remote method invocation, or null
      * if there was an error.
      */
-    public Future<Object> send(String qualifiedMethodName, List<Object> args) {
+    public CompletableFuture<Object> send(String qualifiedMethodName, List<Object> args) {
         final Message m = newMessage(qualifiedMethodName, args);
         final Result result = new Result(m.serialId);
         results.put(m.serialId, result);

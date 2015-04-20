@@ -1,15 +1,15 @@
 package petrglad.javarpc.client;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import org.apache.log4j.Logger;
+import org.omg.CORBA.StringSeqHolder;
 import petrglad.javarpc.RpcException;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -30,38 +30,37 @@ public class ClientExample {
         public void run() {
             final int N = 10000;
             // request->expectedResult
-            final Map<Future<Object>, Long> requests = Maps.newHashMapWithExpectedSize(N);
+
+            final Collection<CompletableFuture<Void>> requests = new ArrayList<>(N);
             for (long i = 0; i < N; i++) {
-                Future<Object> result = client.send("calculator.guess", (long) threadNo, i);
-                if (result == null)
+                CompletableFuture<Object> result = client.send("calculator.guess", (long) threadNo, i);
+                if (result == null) {
                     LOG.error("Can not send request t=" + threadNo + ", i=" + i);
-                else
-                    requests.put(result, threadNo * i);
-            }
-            // Now wait for results
-            while (!requests.isEmpty()) {
-                Iterator<Map.Entry<Future<Object>, Long>> i = requests.entrySet().iterator();
-                while (i.hasNext()) {
-                    Entry<Future<Object>, Long> entry = i.next();
-                    Future<Object> future = entry.getKey();
-                    if (future.isDone()) {
-                        try {
-                            Object v = future.get();
-                            if (v.equals(entry.getValue()))
+                } else {
+                    final long expectedResult = threadNo * i;
+                    requests.add(result.handleAsync((v, throwable) -> {
+                        if (throwable != null) {
+                            LOG.error("Request " + result + " threw an exception: " + throwable);
+                        } else {
+                            if (v.equals(expectedResult))
                                 LOG.info("Request result=" + v);
                             else
                                 LOG.error("Request result=" + v + ", expected result="
-                                        + entry.getValue() + ", call=" + future);
-                        } catch (InterruptedException e) {
-                            LOG.error("Request interrupted " + future);
-                        } catch (ExecutionException e) {
-                            LOG.error("Request " + future + " threw an exception: "
-                                    + e.getCause());
+                                        + expectedResult + ", call=" + result);
                         }
-                        i.remove();
-                    }
+                        return null;
+                    }));
                 }
             }
+
+            // Now wait for results
+            requests.forEach(fut -> {
+                try {
+                    fut.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    LOG.error("Request " + fut + " threw an exception: " + e);
+                }
+            });
         }
     }
 
@@ -76,7 +75,8 @@ public class ClientExample {
                 try (final Client client = new Client(args[0], Integer.parseInt(args[1]))) {
                     basicTest(client);
                     concurrentTest(client);
-                };
+                }
+                ;
                 LOG.info("Finished.");
             }
         } catch (Throwable e) {
