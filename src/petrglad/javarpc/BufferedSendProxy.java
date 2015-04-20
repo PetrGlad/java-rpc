@@ -27,7 +27,7 @@ public class BufferedSendProxy<T> implements Closeable {
     private final Proxy<T> proxy;
 
     public BufferedSendProxy(Socket socket, Sink<Object> receivedSink) {
-        proxy = new Proxy<T>(
+        proxy = new Proxy<>(
                 socket,
                 receivedSink,
                 Spoolers.bufferSupplier(sendQueue, Sockets.getIsSocketOpen(socket)));

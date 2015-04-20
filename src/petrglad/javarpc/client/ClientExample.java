@@ -1,20 +1,16 @@
 package petrglad.javarpc.client;
 
+import com.google.common.collect.Maps;
+import org.apache.log4j.Logger;
+import petrglad.javarpc.RpcException;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-
-import org.apache.log4j.Logger;
-
-import petrglad.javarpc.RpcException;
-
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.util.concurrent.*;
+import java.util.stream.IntStream;
 
 /**
  * Example/test RPC client program.
@@ -77,14 +73,16 @@ public class ClientExample {
                 System.out.println("Usage: Client host port");
             } else {
                 LOG.info("Started " + Arrays.toString(args));
-                final Client client = new Client(args[0], Integer.parseInt(args[1]));
-                basicTest(client);
-                concurrentTest(client);
-                client.close();
+                try (final Client client = new Client(args[0], Integer.parseInt(args[1]))) {
+                    basicTest(client);
+                    concurrentTest(client);
+                };
                 LOG.info("Finished.");
             }
         } catch (Throwable e) {
             LOG.error("Caught exception at top level", e);
+            System.err.println(e.getMessage());
+            System.exit(0);
         }
     }
 
@@ -150,18 +148,9 @@ public class ClientExample {
      * Starts several threads each sending a number of messages.
      */
     private static void concurrentTest(final Client client) {
-        final Set<Thread> threads = Sets.newHashSet();
-        for (int ti = 0; ti < 10; ti++) {
-            final Thread t = new Thread(new Caller(ti, client));
-            threads.add(t);
-            t.setName("Client " + ti);
-            t.start();
-        }
-        for (Thread t : threads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-            }
-        }
+        final ForkJoinPool forkJoin = new ForkJoinPool(8);
+        IntStream.range(0, 10).forEach(ti -> forkJoin.execute(new Caller(ti, client)));
+        //noinspection StatementWithEmptyBody
+        while (!forkJoin.awaitQuiescence(1, TimeUnit.MINUTES)) ;
     }
 }

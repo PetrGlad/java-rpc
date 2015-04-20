@@ -33,10 +33,11 @@ public class ServerSession {
      * immediately if it can not be dispatched.
      */
     private void process(final Object o) {
-        if (!(o instanceof Message))
+        if (!(o instanceof Message)) {
             // XXX Write some error response here?
             throw new RuntimeException("Unexpected type of request "
                     + o.getClass().getCanonicalName());
+        }
         final Message msg = (Message) o;
         final String[] names = msg.methodName.split("\\.");
         final Service s = services.get(names[0]);
