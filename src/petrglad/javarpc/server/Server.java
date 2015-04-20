@@ -56,7 +56,6 @@ public class Server implements Runnable {
     public Server(Services services, int port) {
         this.services = services;
         this.port = port;
-        // TODO Implement graceful shutdown.
         this.executor = new ThreadPoolExecutor(2, 16, 10, TimeUnit.SECONDS,
                 // XXX Queue is unbounded.
                 new LinkedBlockingQueue<Runnable>(),
@@ -69,6 +68,12 @@ public class Server implements Runnable {
                             }
                         })
                         .build());
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                executor.shutdown();
+            }
+        });
     }
 
     @Override

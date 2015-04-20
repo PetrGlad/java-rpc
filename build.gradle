@@ -1,8 +1,8 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 
-sourceCompatibility = 1.6
-version = '0.2'
+sourceCompatibility = 1.8
+version = '0.3'
 
 repositories {
     mavenCentral()
